@@ -1,0 +1,4 @@
+# The specification, examples, and checksum manifest are LF-only.
+# Without this, a Windows checkout with core.autocrlf=true would change the
+# bytes and break `sha256sum -c MANIFEST.sha256`.
+* text=auto eol=lf

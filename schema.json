@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forge-spec.invalid/schema.json",
+  "title": "Forge Ledger Asset Front Matter v1",
+  "description": "JSON Schema for asset front-matter. Unknown fields are allowed and ignored in v1; type-specific required constraints are expressed with allOf.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "type",
+    "status",
+    "created",
+    "last_confirmed",
+    "supersedes",
+    "origin_incident",
+    "subject",
+    "sources",
+    "sensitivity",
+    "confidence"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Format version; must equal version in schema/taxonomy.yaml."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^(dec_|state_|event_|rule_)[0-9A-Za-z]{26}$",
+      "description": "<type prefix>_<26 Crockford base32 characters>."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["decision", "state", "event", "rule"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "accepted", "superseded", "active", "retired", "recorded"]
+    },
+    "created": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "YYYY-MM-DD; must be a real calendar date."
+    },
+    "last_confirmed": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Required for state: the last date it was confirmed still true."
+    },
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "The ID of the asset this one replaces."
+    },
+    "origin_incident": {
+      "type": ["string", "null"],
+      "description": "Required for rule: the incident that triggered this rule, as a span."
+    },
+    "subject": {
+      "type": ["string", "null"],
+      "maxLength": 60,
+      "description": "Required for state: what this asset is about."
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Provenance spans. An empty list is a review error, not a parse error."
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "private"]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0..1; model output must start at low confidence."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["type"],
+        "properties": { "type": { "const": "state" } }
+      },
+      "then": {
+        "required": ["last_confirmed", "subject"],
+        "properties": {
+          "last_confirmed": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["type"],
+        "properties": { "type": { "const": "rule" } }
+      },
+      "then": {
+        "required": ["origin_incident"],
+        "properties": {
+          "origin_incident": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

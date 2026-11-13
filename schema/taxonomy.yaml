@@ -1,0 +1,122 @@
+# 资产分类法 v1 —— 全系统的宪法（人读的一半；代码的一半在 参考实现）
+#
+# 为什么只有 4 种类型：切法不是按业务域，而是按**写规则**。
+# 每种类型对应一种不同的写规则，写规则相同的东西不该是两种类型：
+#
+#   decision  accepted 之后不可变      —— 决策发生在那一刻，事后重写就是编造理由
+#   state     就地替换，必须带日期     —— 过期的事实比没有事实更糟
+#   event     只追加                   —— 发生过的事不能被"更新"
+#   rule      就地替换，必须绑一次事故 —— 规则只能从真实错误长出来（棘轮）
+#
+# 这份文件是规范的机器可读部分。规范与参考实现必须保持同步；
+# 本仓库只发布规范，不发布参考实现。
+#
+# 加类型是 v2 的迁移问题，不是随手加一行的问题：类型是 grep、目录分区、
+# emitter 分支、检索路由的公共键，多一种类型所有下游都多一条分支。
+
+version: 1
+
+asset_types:
+  decision:
+    prefix: dec_
+    lifecycle: append_only
+    # 选定之后不可改：要改就新建一条 supersedes 它。
+    immutable_after: accepted
+    requires_fields: []
+    requires_sections:
+      - 问题
+      - 考虑过的选项
+      - 选定
+      - 后果
+    freshness: null
+
+  state:
+    prefix: state_
+    lifecycle: replace_in_place
+    requires_fields:
+      # 状态必须有"最后一次确认"的日期，否则它无法被判过期。
+      - last_confirmed
+      # 状态必须有题面，否则它不参与冲突判定——而"我确认过的状态不会被后续事件
+      # 挑战"是这个产品最不能出的静默故障。缺它就是 REQUIRED_FIELD_MISSING。
+      - subject
+    requires_sections:
+      - 当前状态
+    freshness:
+      confirm_within_days: 30
+      on_expiry: ask
+
+  event:
+    prefix: event_
+    lifecycle: append_only
+    requires_fields: []
+    requires_sections: []
+    freshness: null
+
+  rule:
+    prefix: rule_
+    lifecycle: replace_in_place
+    requires_fields:
+      # 把"A5 每条规则可追溯到一个具体出过的问题"写进**结构**，而不是写进文档。
+      # 原则只有在被 schema 强制时才算数（反模式 2）。
+      - origin_incident
+    requires_sections:
+      - 规则
+      - 强制
+    freshness: null
+
+# 来源层的 ID 前缀。src_ 不是资产类型——来源是只读的原料，不是编译产物。
+source_types:
+  src_:
+    description: 原始来源（不可变、只追加）
+
+# front-matter 的字段全集。requires_fields 里出现不在这里的名字 = 分类法漂移，
+# 由一致性闸门拦下。
+fields:
+  schema_version:
+    type: integer
+    required: true
+    description: 资产格式版本，取值等于本文件的 version（只有一个版本号）；缺版本号 = v0
+  id:
+    type: string
+    required: true
+    description: "<类型前缀>_<26 位 Crockford base32>；派生用内容寻址，人工用 ULID"
+  type:
+    type: enum
+    values: [decision, state, event, rule]
+    required: true
+  status:
+    type: enum
+    values: [proposed, accepted, superseded, active, retired, recorded]
+    required: true
+  created:
+    type: date
+    required: true
+    description: "YYYY-MM-DD（UTC）。人工可修正，所以它单独存，而不从 ID 里解"
+  last_confirmed:
+    type: date?
+    required: false
+    description: "state 型必填：最后一次确认它仍然成立的日期"
+  supersedes:
+    type: string?
+    required: false
+    description: 被本条取代的资产 ID
+  origin_incident:
+    type: string?
+    required: false
+    description: "rule 型必填：触发这条规则的那个具体出过的问题（一个 span，不是自由文本）"
+  subject:
+    type: string?
+    required: false
+    description: "state 型必填：这条资产讲的是**哪一件事**（题面）。归并与冲突的身份键由它派生；代码只做归一化（NFKC / 空白 / 大小写 / 包裹标点），不做同义词"
+  sources:
+    type: string[]
+    required: true
+    description: 出处 span 列表；空列表由审核报 PROV_NO_SOURCES，不在解析层拒收
+  sensitivity:
+    type: enum
+    values: [public, internal, private]
+    required: true
+  confidence:
+    type: number
+    required: true
+    description: "0..1；模型产物一律从低置信度起步（规范说明）"

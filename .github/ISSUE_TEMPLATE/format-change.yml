@@ -1,0 +1,52 @@
+name: Format change
+description: Propose a specification change (RFC)
+title: "[rfc] "
+labels: ["rfc"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not post real conversations, customer data, or any "anonymized sample".**
+  - type: textarea
+    id: problem
+    attributes:
+      label: The specific problem to solve
+      description: Which two approaches are in conflict? Do not just write "it should support X".
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options considered
+      description: Why was each one rejected?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Chosen option and criterion
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences and residual risks
+      description: Benefits, costs, and what you explicitly did not solve.
+    validations:
+      required: true
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility
+      options:
+        - Compatible (clarification or optional addition)
+        - Incompatible (requires a major-version bump)
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Synthetic example
+      description: The smallest before/after example.
+    validations:
+      required: true

@@ -1,0 +1,30 @@
+# License
+
+This repository is licensed layer by layer. The full license texts are in the
+`LICENSES/` directory.
+
+| Material | License | File |
+|---|---|---|
+| Specification text, `schema/taxonomy.yaml`, `schema.json`, examples | **CC0-1.0** | `LICENSES/CC0-1.0.txt` |
+| Documentation, governance, and contribution documents | **CC-BY-4.0** | `LICENSES/CC-BY-4.0.txt` |
+| Reference implementation (**not in this repository**) | **AGPL-3.0-only** | `LICENSES/AGPL-3.0-only.txt` |
+
+## Why the specification uses CC0
+
+The first requirement of a standard is **zero friction**. Any attribution, patent,
+or compatibility clause makes another implementation choose to establish a competing
+standard; a standard that requires a lawyer to adopt is really just a product
+brochure.
+
+## Why the reference implementation is not CC0
+
+The reference implementation will evolve for a long time and needs to prevent
+"fork it and offer a closed-source hosted service". It uses AGPL-3.0-only. That
+license is reserved for a future implementation repository; this repository does not
+contain the implementation.
+
+## Contributions
+
+Specification text and examples submitted to this repository are licensed under
+CC0-1.0; documentation is licensed under CC-BY-4.0. Submitting a contribution means
+you agree to this. See `CONTRIBUTING.md` for details.
